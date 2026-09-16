@@ -1,4 +1,4 @@
-# Unit 4: Going Further with Diffusion Models
+# 4: Going Further with Diffusion Models
 
 Welcome to Unit 4 of the Hugging Face Diffusion Models Course! In this unit, we will look at some of the many improvements and extensions to diffusion models appearing in the latest research. It will be less code-heavy than previous units have been and is designed to give you a jumping-off point for further research.
 
@@ -6,12 +6,9 @@ Welcome to Unit 4 of the Hugging Face Diffusion Models Course! In this unit, we 
 
 Here are the steps for this unit:
 
-- Make sure you've [signed up for this course](https://huggingface.us17.list-manage.com/subscribe?u=7f57e683fa28b51bfc493d048&id=ef963b4162) so that you can be notified when additional units are added to the course.
 - Read through the material below for an overview of the different topics covered in this unit.
 - Dive deeper into any specific topics with the linked videos and resources.
 - Explore the demo notebooks and then read the 'What Next' section for some project suggestions.
-
-📢 Don't forget to join [Discord](https://huggingface.co/join/discord), where you can discuss the material and share what you've made in the `#diffusion-models-class` channel.
 
 ## Table of Contents
 
