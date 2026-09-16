@@ -1,0 +1,13 @@
+# Core
+torch>=2.1
+torchvision>=0.16
+diffusers>=0.27
+
+# Visualization / notebooks
+matplotlib>=3.8
+jupyter>=1.0
+
+# Dev tooling (used from Phase 2 onward)
+pytest>=8.0
+black>=24.0
+ruff>=0.4
