@@ -14,14 +14,16 @@ The original material is a single Colab notebook. This repo breaks it into:
 
 ## Project status
 
-This repository is being built in phases. **We are currently in Phase 2: data pipeline, corruption process, and BasicUNet.**
+This repository is being built in phases. **We are currently in Phase 3: training loop and naive iterative sampler.**
 
 | Phase | Scope | Status |
 |-------|-------|--------|
 | 1 | Repo scaffolding & project documents | ✅ Done |
-| 2 | Data pipeline + corruption process (`corrupt`) + BasicUNet (this phase) | ✅ Done |
-| 3 | Training loop + naive iterative sampler + experiment tracking | ⏳ Planned |
+| 2 | Data pipeline + corruption process (`corrupt`) + BasicUNet | ✅ Done |
+| 3 | Training loop + naive iterative sampler (this phase) | ✅ Done |
 | 4 | `diffusers`-based DDPM comparison (`UNet2DModel`, `DDPMScheduler`, noise/timestep conditioning, samplers) | ⏳ Planned |
+
+> **Note on sample quality:** the environment this repo was built in can't reach the real MNIST mirrors (network restrictions), so the committed notebook outputs were produced against `torchvision.datasets.FakeData` (random noise) rather than real digits. The pipeline is fully verified end-to-end -- data loading, corruption, training loop, checkpointing, and the sampler all run and the loss provably decreases (see `tests/test_train.py::test_overfitting_a_single_batch_reduces_loss`) -- but the sample images in `docs/assets/` only show noise converging to a blurred average, not digit shapes, because there's no digit structure in FakeData to learn. Re-run `notebooks/02_training_and_sampling.ipynb` somewhere with normal internet access to get real MNIST-trained samples.
 
 See [`PROJECT_PLAN.md`](PROJECT_PLAN.md) for the detailed breakdown of each phase, deliverables, and acceptance criteria.
 
@@ -76,6 +78,21 @@ print(count_parameters(net))      # ~309,000, matching the original notebook
 ```
 
 **Note on the dataset:** `dms.data.get_dataloader` downloads MNIST/FashionMNIST via `torchvision`, which needs outbound network access to the dataset mirrors. If that's unavailable (e.g. a sandboxed environment), fall back to `torchvision.datasets.FakeData` for correctly-shaped random data — see `notebooks/01_corruption_and_model.ipynb` for a working example of this fallback.
+
+```python
+from dms.data import get_dataloader
+from dms.train import TrainConfig, save_checkpoint, train_model
+from dms.sample import sample
+
+dataloader = get_dataloader(name="mnist", root="data", batch_size=64)
+net = BasicUNet()
+result = train_model(net, dataloader, TrainConfig(epochs=3, lr=1e-3))
+save_checkpoint(net, "checkpoints/basic_unet.pt")
+
+generated = sample(net, n_steps=40, shape=(8, 1, 28, 28))  # naive iterative sampler
+```
+
+See `notebooks/02_training_and_sampling.ipynb` for the full training + sampling walkthrough, including a visualization of the denoising trajectory from pure noise to a final sample.
 
 ## Reference
 
