@@ -1,71 +1,65 @@
 # Project Plan
 
-This document defines the phased build-out of the project. Each phase is scoped so it can be a self-contained pull request with its own review point before moving on. Phase 1 is fully defined now; Phases 2–4 are defined at a summary level here and will each get a detailed spec (acceptance criteria, file list, test list) written immediately before that phase starts, once Phase 1 is confirmed.
+This document records the phased build-out of the project. **All four phases are complete.** Each phase was delivered as its own reviewable step, in order, with tests passing before moving to the next.
 
 ---
 
-## Phase 1 — Project documents & scaffolding (current phase)
+## Phase 1 — Project documents & scaffolding ✅
 
 **Goal:** have a repo that clearly communicates what it is, how it's organized, and how it will grow, before any model code is written.
 
-**Deliverables:**
-- `README.md` — project overview, structure, roadmap, usage stub
-- `PROJECT_PLAN.md` — this file
-- `CONTRIBUTING.md` — workflow, branch/commit conventions, coding style
-- `LICENSE` — MIT
-- `requirements.txt` — pinned core dependencies (`torch`, `torchvision`, `diffusers`, `matplotlib`, etc.)
-- `.gitignore` — Python, Jupyter, OS, and dataset artifacts
-- Empty `src/`, `notebooks/`, `tests/`, `docs/assets/` directories (with `.gitkeep`) so the intended structure is visible immediately
-
-**Acceptance criteria:**
-- A newcomer can read `README.md` and `PROJECT_PLAN.md` and understand the goal, the four phases, and where future code will live, without reading any implementation.
-- `git init` + first commit produces a clean initial repo history ("Phase 1: project scaffolding and docs").
+**Delivered:**
+- `README.md`, `PROJECT_PLAN.md`, `CONTRIBUTING.md`, `LICENSE` (MIT), `requirements.txt`, `.gitignore`
+- Empty `src/`, `notebooks/`, `tests/`, `docs/assets/` directories, later populated in Phases 2–4
 
 ---
 
-## Phase 2 — Data pipeline, corruption process, and BasicUNet
+## Phase 2 — Data pipeline, corruption process, and BasicUNet ✅
 
 **Goal:** reproduce the "toy" half of the notebook as importable, tested modules.
 
-**Planned scope:**
-- `src/dms/data.py`: MNIST/FashionMNIST dataset loading + `DataLoader` helpers
-- `src/dms/corrupt.py`: the linear `corrupt(x, amount)` mixing function, with unit tests for the `amount=0` and `amount=1` edge cases and shape/broadcasting correctness
-- `src/dms/models.py`: `BasicUNet` (3 down-conv / 3 up-conv layers, skip connections, `MaxPool2d` + `Upsample`), with a test asserting output shape matches input shape and parameter count is in the expected ballpark (~300k)
-- `notebooks/01_corruption_and_model.ipynb`: exploratory notebook visualizing corrupted digits at increasing `amount`, mirroring the original notebook's plots
-
-**Will be detailed further** (file-by-file spec, exact function signatures, test cases) at the start of Phase 2.
+**Delivered:**
+- `src/dms/data.py` — MNIST/FashionMNIST dataset + `DataLoader` helpers, with a `FakeData` fallback pattern for network-restricted environments (documented in the notebook)
+- `src/dms/corrupt.py` — the linear `corrupt(x, amount)` uniform-noise mixing function
+- `src/dms/models.py` — `BasicUNet` (3 down-conv / 3 up-conv, skip connections, `MaxPool2d` + `Upsample`); **309,057 parameters**, matching the original notebook's "~300k" claim
+- `notebooks/01_corruption_and_model.ipynb` — corruption sweep + model shape checks, executed end-to-end
+- 12 unit tests (edge cases, broadcasting, shapes, parameter count)
 
 ---
 
-## Phase 3 — Training loop, naive sampler, and experiment tracking
+## Phase 3 — Training loop and naive iterative sampler ✅
 
 **Goal:** train `BasicUNet` end-to-end and generate samples using the simple iterative "move partway toward the prediction" sampler.
 
-**Planned scope:**
-- `src/dms/train.py`: configurable training loop (epochs, batch size, LR, optimizer), loss logging
-- `src/dms/sample.py`: the naive `n_steps` iterative sampler from the notebook, parameterized by number of steps
-- `docs/assets/`: saved loss curves and sample grids for a baseline run, referenced from the README
-- `tests/`: a fast smoke test that trains for a handful of steps on a tiny subset and checks the loss is finite and decreasing on average
-- Optional: a `configs/` folder if runs become parameterized via YAML/CLI args
-
-**Will be detailed further** at the start of Phase 3.
+**Delivered:**
+- `src/dms/train.py` — `train_model()` with a `TrainConfig` dataclass, `save_checkpoint`/`load_checkpoint`
+- `src/dms/sample.py` — the naive `n_steps` iterative sampler, with `return_intermediates` for trajectory visualization
+- `notebooks/02_training_and_sampling.ipynb` — trains `BasicUNet`, plots the loss curve, samples at several step counts, visualizes the denoising trajectory
+- 12 new unit tests (24 total), including an overfit-a-single-batch test proving the loop actually reduces loss (not just runs)
 
 ---
 
-## Phase 4 — DDPM comparison via `diffusers`
+## Phase 4 — DDPM comparison via `diffusers` ✅
 
 **Goal:** reproduce the second half of the notebook — swapping in `UNet2DModel` + `DDPMScheduler` — and document the conceptual differences from Phases 2–3 directly in code and docs.
 
-**Planned scope:**
-- `src/dms/ddpm.py`: wraps `diffusers.UNet2DModel` and `DDPMScheduler`, exposing the same train/sample interface as Phases 2–3 for direct comparison
-- Side-by-side comparison covering: Gaussian (`randn`) vs. uniform (`rand`) noise, noise-prediction vs. denoised-image-prediction objectives, timestep conditioning, and parameter count differences (~1.7M vs. ~300k)
-- `notebooks/02_ddpm_comparison.ipynb`: recreates the notebook's side-by-side plots (loss curves, generated digit grids)
-- `docs/COMPARISON.md`: a written summary of BasicUNet/naive-sampler vs. `UNet2DModel`/`DDPMScheduler`, with pointers to further reading (e.g., "Elucidating the Design Space of Diffusion-Based Generative Models")
-
-**Will be detailed further** at the start of Phase 4.
+**Delivered:**
+- `src/dms/ddpm.py` — `build_ddpm_unet`, `build_ddpm_scheduler`, `train_ddpm`, `sample_ddpm`, mirroring the Phase 2–3 interface for direct comparison
+- Parameter count check: **1,707,009** (`UNet2DModel`, default config) vs. **309,057** (`BasicUNet`) — matches the notebook's "~1.7M vs. ~300k" almost exactly
+- `notebooks/03_ddpm_comparison.ipynb` — trains the DDPM, plots the noise-prediction loss curve, samples at several inference-step counts, visualizes the reverse-diffusion trajectory
+- `docs/COMPARISON.md` — point-by-point written comparison: noise type (uniform vs. Gaussian), training objective (predict image vs. predict noise), timestep conditioning (absent vs. present), sampler (ad hoc mixing vs. `scheduler.step`), and model capacity
+- 9 new unit tests (33 total across the whole suite)
 
 ---
 
-## How phases will be delivered
+## Known limitation
 
-Each phase (2, 3, 4) will be proposed as its own step in this conversation once the previous phase is accepted: a short spec first, then the actual files. This keeps changes reviewable instead of dumping the whole implementation at once.
+The environment this repo was built in cannot reach the real MNIST mirrors (both `ossci-datasets.s3.amazonaws.com` and `yann.lecun.com` return HTTP 403 under its network restrictions), so every notebook's committed outputs were produced against `torchvision.datasets.FakeData` rather than real digits. This is called out explicitly in `README.md` and `docs/COMPARISON.md`. The code itself does not have this limitation: `get_dataloader(name="mnist", ...)` will download and use real MNIST automatically in any environment with normal internet access, and every module is unit-tested independently of which dataset is used.
+
+## Suggested next steps beyond this project
+
+Not part of the four planned phases, but natural follow-ups if extending this further:
+- Re-run all three notebooks with real MNIST/FashionMNIST for genuine digit samples
+- Add class conditioning (generate a specific digit on request)
+- Try alternative samplers (DDIM, ancestral sampling with fewer steps) via `diffusers`' other schedulers
+- Longer training runs with a learning-rate schedule and a held-out validation split

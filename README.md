@@ -14,42 +14,51 @@ The original material is a single Colab notebook. This repo breaks it into:
 
 ## Project status
 
-This repository is being built in phases. **We are currently in Phase 3: training loop and naive iterative sampler.**
+**All four phases are complete.** This project fully reproduces the [original notebook](https://huggingface.co/learn/diffusion-course/en/unit1/3) as a tested, importable package: the toy corruption/BasicUNet/naive-sampler pipeline, and a `diffusers`-based DDPM (`UNet2DModel` + `DDPMScheduler`) for direct comparison.
 
 | Phase | Scope | Status |
 |-------|-------|--------|
 | 1 | Repo scaffolding & project documents | ✅ Done |
 | 2 | Data pipeline + corruption process (`corrupt`) + BasicUNet | ✅ Done |
-| 3 | Training loop + naive iterative sampler (this phase) | ✅ Done |
-| 4 | `diffusers`-based DDPM comparison (`UNet2DModel`, `DDPMScheduler`, noise/timestep conditioning, samplers) | ⏳ Planned |
+| 3 | Training loop + naive iterative sampler | ✅ Done |
+| 4 | `diffusers`-based DDPM comparison (`UNet2DModel`, `DDPMScheduler`) | ✅ Done |
 
-> **Note on sample quality:** the environment this repo was built in can't reach the real MNIST mirrors (network restrictions), so the committed notebook outputs were produced against `torchvision.datasets.FakeData` (random noise) rather than real digits. The pipeline is fully verified end-to-end -- data loading, corruption, training loop, checkpointing, and the sampler all run and the loss provably decreases (see `tests/test_train.py::test_overfitting_a_single_batch_reduces_loss`) -- but the sample images in `docs/assets/` only show noise converging to a blurred average, not digit shapes, because there's no digit structure in FakeData to learn. Re-run `notebooks/02_training_and_sampling.ipynb` somewhere with normal internet access to get real MNIST-trained samples.
+33 unit tests pass (`pytest`), covering the corruption process, `BasicUNet`, the training loop, the naive sampler, and the full DDPM wrapper (`build_ddpm_unet`, `build_ddpm_scheduler`, `train_ddpm`, `sample_ddpm`).
+
+> **Note on sample quality:** the environment this repo was built in can't reach the real MNIST mirrors (network restrictions), so the committed notebook outputs were produced against `torchvision.datasets.FakeData` (random noise) rather than real digits. The pipeline is fully verified end-to-end for both models -- data loading, corruption/noising, training loop, checkpointing, and both samplers all run, and training loss provably decreases for both (see `tests/test_train.py::test_overfitting_a_single_batch_reduces_loss`) -- but the sample images in `docs/assets/` only show noise converging toward a blurred average, not digit shapes, because there's no digit structure in FakeData to learn. Re-run the notebooks somewhere with normal internet access to get real MNIST-trained samples that actually look like digits.
 
 See [`PROJECT_PLAN.md`](PROJECT_PLAN.md) for the detailed breakdown of each phase, deliverables, and acceptance criteria.
 
-## Planned project structure
+## Project structure
 
 ```
 diffusion-models-from-scratch/
 ├── README.md                # You are here
-├── PROJECT_PLAN.md           # Phase-by-phase roadmap
+├── PROJECT_PLAN.md           # Phase-by-phase build history
 ├── CONTRIBUTING.md           # How to work on this repo
 ├── LICENSE                   # MIT
 ├── requirements.txt          # Pinned-ish dependencies
+├── pyproject.toml            # Installable `dms` package (src layout)
 ├── .gitignore
 ├── src/
-│   └── dms/                  # "diffusion models from scratch" package (added in Phase 2+)
-│       ├── data.py           # dataset + corruption process
+│   └── dms/                  # "diffusion models from scratch" package
+│       ├── data.py           # dataset + dataloader helpers (MNIST/FashionMNIST)
+│       ├── corrupt.py        # the toy uniform-noise corruption process
 │       ├── models.py         # BasicUNet
-│       ├── train.py          # training loop
-│       └── sample.py         # naive iterative sampler
-├── notebooks/                # Exploratory notebooks mirroring the original course notebook
-├── tests/                    # Unit tests for corruption, model shapes, training step
+│       ├── train.py          # training loop for BasicUNet
+│       ├── sample.py         # naive iterative sampler
+│       └── ddpm.py           # diffusers-based UNet2DModel + DDPMScheduler wrapper
+├── notebooks/
+│   ├── 01_corruption_and_model.ipynb    # Phase 2: corruption sweep, model shape checks
+│   ├── 02_training_and_sampling.ipynb   # Phase 3: train BasicUNet, sample, visualize trajectory
+│   └── 03_ddpm_comparison.ipynb         # Phase 4: train the DDPM, sample, visualize trajectory
+├── tests/                     # 33 unit tests across all four phases
 └── docs/
-    └── assets/                # Generated plots / diagrams for README and docs
+    ├── COMPARISON.md          # Phase 4: toy model vs. DDPM, point by point
+    └── assets/                # Generated plots referenced from this README
 ```
 
-Folders for future phases (`src/`, `notebooks/`, `tests/`, `docs/assets/`) already exist as empty placeholders (`.gitkeep`) so the structure is visible from Phase 1 onward, even before code is added.
+`checkpoints/` is created by the notebooks at run time (git-ignored) to hold trained model weights.
 
 ## Getting started
 
@@ -93,6 +102,22 @@ generated = sample(net, n_steps=40, shape=(8, 1, 28, 28))  # naive iterative sam
 ```
 
 See `notebooks/02_training_and_sampling.ipynb` for the full training + sampling walkthrough, including a visualization of the denoising trajectory from pure noise to a final sample.
+
+## The DDPM comparison (Phase 4)
+
+```python
+from dms.data import get_dataloader
+from dms.ddpm import DDPMTrainConfig, build_ddpm_scheduler, build_ddpm_unet, sample_ddpm, train_ddpm
+
+dataloader = get_dataloader(name="mnist", root="data", batch_size=64)
+ddpm_net = build_ddpm_unet()                  # ~1.7M params, vs. BasicUNet's ~309k
+scheduler = build_ddpm_scheduler(num_train_timesteps=1000)
+
+result = train_ddpm(ddpm_net, scheduler, dataloader, DDPMTrainConfig(epochs=3))
+generated = sample_ddpm(ddpm_net, scheduler, shape=(8, 1, 28, 28), num_inference_steps=200)
+```
+
+See `notebooks/03_ddpm_comparison.ipynb` for the full walkthrough, and [`docs/COMPARISON.md`](docs/COMPARISON.md) for a point-by-point comparison of every difference between this and the toy model above: noise type, training objective, timestep conditioning, sampler, and model capacity.
 
 ## Reference
 
