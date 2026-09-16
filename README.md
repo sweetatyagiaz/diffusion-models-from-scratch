@@ -1,4 +1,17 @@
-# Diffusion Models from Scratch
+# Diffusion Models Course
+
+[![License](https://img.shields.io/static/v1?label=License&message=Apache&color=<Yellow>)](https://github.com/huggingface/diffusion-models-class/blob/main/LICENSE) &nbsp;
+[![GitHub forks](https://img.shields.io/github/forks/huggingface/diffusion-models-class.svg?style=social&label=Fork&maxAge=2592000)](https://github.com/dhakalnirajan/diffusion-models-class) &nbsp;
+[![Made with Jupyter](https://img.shields.io/badge/Made%20with-Jupyter-red?style=flat-square&logo=Jupyter)](https://jupyter.org/try) &nbsp;
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat-square&logo=PyTorch&logoColor=white)
+
+In this free course, you will:
+- 👩‍🎓 Study the theory behind diffusion models
+- 🧨 Learn how to generate images and audio with the popular 🤗 Diffusers library
+- 🏋️‍♂️ Train your own diffusion models from scratch
+- 📻 Fine-tune existing diffusion models on new datasets
+- 🗺 Explore conditional generation and guidance
+- 🧑‍🔬 Create your own custom diffusion model pipelines
 
 A from-scratch, educational reimplementation of the [Hugging Face Diffusion Course — "Diffusion Models from Scratch"](https://huggingface.co/learn/diffusion-course/en/unit1/3) notebook, restructured as a proper Python project instead of a single notebook.
 
