@@ -1,8 +1,6 @@
 # Diffusion Models from Scratch
 
-"""
-A from-scratch, educational reimplementation of the [Hugging Face Diffusion Course — "Diffusion Models from Scratch"](https://huggingface.co/learn/diffusion-course/en/unit1/3) notebook, restructured as a proper Python project instead of a single notebook.
-"""
+A from-scratch, educational Diffusion Course restructured as a proper Python project instead of a single notebook.
 
 The goal is to build a **toy diffusion model** end-to-end (corruption process → minimal UNet → training loop → sampling), then compare it against a **DDPM-style implementation** using `diffusers` (`UNet2DModel`, `DDPMScheduler`), so the differences in design choices are visible in code, not just in theory.
 
@@ -16,7 +14,7 @@ The original material is a single Colab notebook. This repo breaks it into:
 
 ## Project status
 
-**All four phases are complete.** This project fully reproduces the [original notebook](https://huggingface.co/learn/diffusion-course/en/unit1/3) as a tested, importable package: the toy corruption/BasicUNet/naive-sampler pipeline, and a `diffusers`-based DDPM (`UNet2DModel` + `DDPMScheduler`) for direct comparison.
+**All four phases are complete.** This project fully tested, importable package: the toy corruption/BasicUNet/naive-sampler pipeline, and a `diffusers`-based DDPM (`UNet2DModel` + `DDPMScheduler`) for direct comparison.
 
 | Phase | Scope | Status |
 |-------|-------|--------|
@@ -123,8 +121,6 @@ See `notebooks/03_ddpm_comparison.ipynb` for the full walkthrough, and [`docs/CO
 
 ## Reference
 
-- Original notebook: [Diffusion Models from Scratch — Hugging Face Diffusion Course](https://huggingface.co/learn/diffusion-course/en/unit1/3)
-- Written by Jonathan Whitaker for the Hugging Face Diffusion Course; overlaps with his own course, ["The Generative Landscape"](https://johnowhitaker.github.io/tglcourse/dm1.html).
 - Background reading: [U-Net: Convolutional Networks for Biomedical Image Segmentation](https://arxiv.org/abs/1505.04597), [Elucidating the Design Space of Diffusion-Based Generative Models](https://arxiv.org/abs/2206.00364).
 
 ## License
